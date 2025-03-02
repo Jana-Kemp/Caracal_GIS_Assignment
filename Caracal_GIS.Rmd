@@ -1,0 +1,54 @@
+---
+title: "Caracal_Sightings_GIS"
+author: "Jana Kemp"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r setup, include=FALSE}
+library(tidyverse) #For geenral data handling
+library(sf) #For spatial data handling
+library(leaflet) #For interactive mapping
+library(magrittr)   # Pipe operator (%>%) for clean code
+library(htmltools) #For labels and popups
+```
+
+# Urban Edge Polygon
+Reading in Cape Peninsula Urban Edge shape file and transforming it to Coordinate reference system 4326 (Uses longitude and latitude)
+
+```{r}
+edge <- st_read("C:/Users/27761/Documents/GIT/Caracal_GIS_Assignment/urban_edge/urban_edge/urban_diss.shp")
+
+# Transform to WGS 84 (EPSG: 4326)
+edge_sf <- st_transform(edge, crs = 4326)
+```
+
+# Reading and Transforming Caracal Data
+Import a CSV file of caracal sightings reported to the Urban Caracal Project (Anonymised).
+Note: Latitude and Longitude were mislabeled in the data I was given, hence they have been switched as the X and Y values here. 
+
+```{r}
+caracal_data <- read.csv("C:/Users/27761/Documents/GIT/Caracal_GIS_Assignment/Caracal_Data.csv")
+
+caracal_sf <- st_as_sf(caracal_data, coords = c("Latitude", "Longitude"), crs = 4326)
+```
+
+# Creating an interactive map
+Create an interactive map centered around Cape Town, added the urban edge as a polygon layer, and plot caracal sightings as orange circles. 
+```{r}
+leaflet() %>%
+  addTiles(group = "Default") %>%
+  #Setting the view to the Cape Peninsula
+  setView(lng = 18.4, lat = -34.25, zoom = 9) %>% 
+  #adding the urban edge polygon
+  addPolygons(data = edge, 
+              color = "black",       
+              weight = 2,           
+              fillColor = "grey", 
+              fillOpacity = 0.5)  %>%  
+  #adding caracal sightings
+  addCircleMarkers(data = caracal_sf,
+                   group = "Caracal",
+                   radius = 5, 
+                   color = "orange") 
+```
+
