@@ -67,6 +67,7 @@ leaflet() %>%
                    group = "Caracal",
                    radius = 5, 
                    color = "orange",
+                   #labeling by date 
                    label = ~ as.character(caracal_sf$Date)) 
 ```
 
