@@ -5,11 +5,12 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 ```{r setup, include=FALSE}
-library(tidyverse) #For geenral data handling
+library(tidyverse) #For general data handling
 library(sf) #For spatial data handling
 library(leaflet) #For interactive mapping
 library(magrittr)   # Pipe operator (%>%) for clean code
 library(htmltools) #For labels and popups
+library(dplyr)
 ```
 
 # Urban Edge Polygon
@@ -24,12 +25,28 @@ edge_sf <- st_transform(edge, crs = 4326)
 
 # Reading and Transforming Caracal Data
 Import a CSV file of caracal sightings reported to the Urban Caracal Project (Anonymised).
-Note: Latitude and Longitude were mislabeled in the data I was given, hence they have been switched as the X and Y values here. 
+ 
 
 ```{r}
 caracal_data <- read.csv("C:/Users/27761/Documents/GIT/Caracal_GIS_Assignment/Caracal_Data.csv")
 
-caracal_sf <- st_as_sf(caracal_data, coords = c("Latitude", "Longitude"), crs = 4326)
+#Fixing error in dataset. Longitude and Latitude were mislabelled
+
+caracal_data <- caracal_data %>%
+  rename(longitude = Latitude)
+
+caracal_data <- caracal_data %>%
+  rename(latitude = Longitude)
+
+
+#Editing mistake in longitude (was negative)
+caracal_data[159, "longitude"] <- 29.75148
+
+#Removing sightings far East of the Cape Peninsula (Not relevant)
+
+caracal_data <- caracal_data[caracal_data$longitude <= 20, ]
+
+caracal_sf <- st_as_sf(caracal_data, coords = c("longitude", "latitude"), crs = 4326)
 ```
 
 # Creating an interactive map
@@ -49,6 +66,7 @@ leaflet() %>%
   addCircleMarkers(data = caracal_sf,
                    group = "Caracal",
                    radius = 5, 
-                   color = "orange") 
+                   color = "orange",
+                   label = ~ as.character(caracal_sf$Date)) 
 ```
 
